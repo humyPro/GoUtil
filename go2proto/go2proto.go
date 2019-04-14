@@ -134,6 +134,17 @@ func handStruct(s string) {
 		startEndFlag = false
 		return
 	}
+
+	if s == "gorm.Model" {
+		writer.WriteString("\tint32 id = " + strconv.Itoa(fieldNumber) + ";\n")
+		fieldNumber++
+		writer.WriteString("\tint64 createdAt = " + strconv.Itoa(fieldNumber) + ";\n")
+		fieldNumber++
+		writer.WriteString("\tint64 updatedAt = " + strconv.Itoa(fieldNumber) + ";\n")
+		fieldNumber++
+		writer.WriteString("\tint64 deletedAt = " + strconv.Itoa(fieldNumber) + ";\n")
+		fieldNumber++
+	}
 	err(s)
 
 }
