@@ -104,7 +104,7 @@ func handStruct(s string) {
 		f := strArr[1]
 		t := strArr[2]
 		desc := strArr[3]
-		writer.WriteString("\t" + typeMap[t] + " " + f + " = " + strconv.Itoa(fieldNumber) + ";  " + desc + "\n")
+		writer.WriteString("\t" + getType(t) + " " + f + " = " + strconv.Itoa(fieldNumber) + ";  " + desc + "\n")
 		fieldNumber++
 		writer.Flush()
 		return
@@ -118,10 +118,10 @@ func handStruct(s string) {
 		t := strArr[4]
 		desc := strArr[5]
 		for _, f := range fields {
-			writer.WriteString("\t" + typeMap[t] + " " + strings.TrimSpace(f) + " = " + strconv.Itoa(fieldNumber) + ";  " + desc + "\n")
+			writer.WriteString("\t" + getType(t) + " " + strings.TrimSpace(f) + " = " + strconv.Itoa(fieldNumber) + ";  " + desc + "\n")
 			fieldNumber++
 		}
-		writer.WriteString("\t" + typeMap[t] + " " + strings.TrimSpace(last) + " = " + strconv.Itoa(fieldNumber) + ";  " + desc + "\n")
+		writer.WriteString("\t" + getType(t) + " " + strings.TrimSpace(last) + " = " + strconv.Itoa(fieldNumber) + ";  " + desc + "\n")
 		fieldNumber++
 		writer.Flush()
 		return
@@ -148,6 +148,15 @@ func handStruct(s string) {
 	err(s)
 
 }
+
+func getType(s string) string {
+	t, ok := typeMap[s]
+	if !ok {
+		log.Fatal(lineCount, ":无法转换成的go类型->", s)
+	}
+	return t
+}
+
 func err(s string) {
 	s = fmt.Sprintf("%d:语法错误,%s\n", lineCount, s)
 	writer.WriteString(s)
