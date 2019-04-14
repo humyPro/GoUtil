@@ -1,0 +1,16 @@
+syntax = "proto3";
+package oth;
+message A {
+    int32 A = 1; //ASDASD
+    int32 C = 2; //ASDASD
+    string B = 3; //sadas
+}
+
+message C {
+    string str = 1; //字符串
+    int64 x = 2; //数字
+    int32 v = 3;
+    int32 c = 4;
+    int32 q = 5;
+}
+
