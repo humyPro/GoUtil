@@ -96,9 +96,7 @@ func handStruct(s string) {
 		writer.Flush()
 		return
 	}
-	if !startEndFlag {
-		err(s)
-	}
+
 	strArr = field1.FindStringSubmatch(s)
 	if len(strArr) == 4 {
 		f := strArr[1]
@@ -136,16 +134,19 @@ func handStruct(s string) {
 	}
 
 	if s == "gorm.Model" {
-		writer.WriteString("\tint32 id = " + strconv.Itoa(fieldNumber) + ";\n")
+		writer.WriteString("\tint32 Id = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
-		writer.WriteString("\tint64 createdAt = " + strconv.Itoa(fieldNumber) + ";\n")
+		writer.WriteString("\tint64 CreatedAt = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
-		writer.WriteString("\tint64 updatedAt = " + strconv.Itoa(fieldNumber) + ";\n")
+		writer.WriteString("\tint64 UpdatedAt = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
-		writer.WriteString("\tint64 deletedAt = " + strconv.Itoa(fieldNumber) + ";\n")
+		writer.WriteString("\tint64 DeletedAt = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
+		return
 	}
-	err(s)
+	if startEndFlag {
+		err(s)
+	}
 
 }
 
