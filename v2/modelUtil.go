@@ -105,24 +105,24 @@ func deepCopy(av reflect.Value, bv reflect.Value) {
 	}
 	//数组或者切片(其实只能是切片)
 	if isArrayOrSlice(bv.Kind()) {
-		//if bv.CanSet() {
-		if bv.IsNil() {
-			bv.Set(reflect.MakeSlice(reflect.SliceOf(bv.Type().Elem()), 0, 0))
-		}
-		//切片,不考虑目标的长度
-		if bv.Type().Elem() == av.Type().Elem() {
-			reflect.Copy(bv, av)
-		} else if bv.Type().Elem().Kind() == reflect.Struct && av.Type().Elem().Kind() == reflect.Struct {
+		if bv.CanSet() {
+			if bv.IsNil() {
+				bv.Set(reflect.MakeSlice(reflect.SliceOf(bv.Type().Elem()), 0, 0))
+			}
+			//切片,不考虑目标的长度
+			if bv.Type().Elem() == av.Type().Elem() {
+				reflect.Copy(bv, av)
+			} else if bv.Type().Elem().Kind() == reflect.Struct && av.Type().Elem().Kind() == reflect.Struct {
 
-			l := av.Len()
-			for i := 0; i < l; i++ {
-				v1 := av.Index(i)
-				v2 := reflect.New(bv.Type().Elem())
-				deepCopy(v1, v2)
-				bv.Set(reflect.Append(bv, v2.Elem()))
+				l := av.Len()
+				for i := 0; i < l; i++ {
+					v1 := av.Index(i)
+					v2 := reflect.New(bv.Type().Elem())
+					deepCopy(v1, v2)
+					bv.Set(reflect.Append(bv, v2.Elem()))
+				}
 			}
 		}
-		//}
 		return
 	}
 }
