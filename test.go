@@ -19,45 +19,38 @@ func main() {
 		Type:        0,
 		OriginJson:  "asdasd",
 	}
+
 	user.ID = 12312312
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 	now := time.Now()
 	user.DeletedAt = &now
 
-	var users []model.User
-	users = append(users, user)
-	users = append(users, user)
-	users = append(users, user)
-	users = append(users, user)
-	users = append(users, user)
+	page := model.Page{
+		PageNum:  12,
+		PageSize: 13,
+		Total:    144,
+		Data:     user,
+	}
 
-	//page := model.Page{
-	//	PageNum:  12,
-	//	PageSize: 13,
-	//	Total:    144,
-	//	Data:     users,
-	//}
-
-	bytes, _ := json.Marshal(users)
+	bytes, _ := json.Marshal(page)
 	fmt.Println(string(bytes))
 
-	//page2 := model.Page{
-	//	Data: []model.Userx{},
-	//}
-	x := []model.Userx{}
-	_ = v2.TrandformModel(&users, &x)
+	page2 := model.PageX{
+		Data: model.Userx{},
+	}
+	_ = v2.TransformModel(&page, &page2)
 
-	bytes, _ = json.Marshal(x)
+	bytes, _ = json.Marshal(page2)
 	fmt.Println(string(bytes))
 
-	//page3 := model.Page{
-	//	Data: []model.User{},
-	//}
-	p := []model.User{}
-	b := v2.TrandformModel(&x, &p)
+	page3 := model.Page{
+		Data: model.User{},
+	}
+	//p := []model.User{}
+	b := v2.TransformModel(&page2, &page3)
 	fmt.Println(b)
-	bytes, _ = json.Marshal(p)
+	bytes, _ = json.Marshal(page3)
 	fmt.Println(string(bytes))
 	//
 	//i := reflect.TypeOf(user).NumField()

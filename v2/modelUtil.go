@@ -14,8 +14,8 @@ const (
 
 var timeType = reflect.TypeOf(time.Now())
 
-// 目前只支持最简单的表结构以及其切片类型,
-func TrandformModel(a interface{}, b interface{}) error {
+// 目前只支持最简单的表结构以及其切片类型,结构体中不能有指针和interface类型,可以嵌套结构体,如果是切片类型,元素类型不能是指针,时间是毫秒级别
+func TransformModel(a interface{}, b interface{}) error {
 	bv := reflect.ValueOf(b)
 	if bv.Kind() != reflect.Ptr || bv.IsNil() {
 		return errors.New("b对象必须为指针类型")
@@ -30,17 +30,18 @@ func TrandformModel(a interface{}, b interface{}) error {
 	if bv.Kind() == reflect.Struct && av.Kind() == reflect.Struct {
 		deepCopy(av, bv)
 		return nil
-	} else if bv.Kind() == reflect.Slice && av.Kind() == reflect.Slice {
-		deepCopy(av, bv)
-		return nil
 	}
+	//else if bv.Kind() == reflect.Slice && av.Kind() == reflect.Slice {
+	//	deepCopy(av, bv)
+	//	return nil
+	//}
 
-	return errors.New("a和b的类型必须都是结构体或者切片")
+	return errors.New("a和b的类型必须都是结构体类型")
 
 }
 func deepCopy(av reflect.Value, bv reflect.Value) {
-	av = getRealValue(av)
-	bv = getRealValue(bv)
+	//av = getRealValue(av)
+	//bv = getRealValue(bv)
 	//结构体类型
 	if isStruct(bv.Kind()) {
 		bf := getFieldMap(bv)
@@ -104,27 +105,27 @@ func deepCopy(av reflect.Value, bv reflect.Value) {
 		return
 	}
 	//数组或者切片(其实只能是切片)
-	if isArrayOrSlice(bv.Kind()) {
-		if bv.CanSet() {
-			if bv.IsNil() {
-				bv.Set(reflect.MakeSlice(reflect.SliceOf(bv.Type().Elem()), 0, 0))
-			}
-			//切片,不考虑目标的长度
-			if bv.Type().Elem() == av.Type().Elem() {
-				reflect.Copy(bv, av)
-			} else if bv.Type().Elem().Kind() == reflect.Struct && av.Type().Elem().Kind() == reflect.Struct {
-
-				l := av.Len()
-				for i := 0; i < l; i++ {
-					v1 := av.Index(i)
-					v2 := reflect.New(bv.Type().Elem())
-					deepCopy(v1, v2)
-					bv.Set(reflect.Append(bv, v2.Elem()))
-				}
-			}
-		}
-		return
-	}
+	//if isArrayOrSlice(bv.Kind()) {
+	//	if bv.CanSet() {
+	//		if bv.IsNil() {
+	//			bv.Set(reflect.MakeSlice(reflect.SliceOf(bv.Type().Elem()), 0, 0))
+	//		}
+	//		//切片,不考虑目标的长度
+	//		if bv.Type().Elem() == av.Type().Elem() {
+	//			reflect.Copy(bv, av)
+	//		} else if bv.Type().Elem().Kind() == reflect.Struct && av.Type().Elem().Kind() == reflect.Struct {
+	//
+	//			l := av.Len()
+	//			for i := 0; i < l; i++ {
+	//				v1 := av.Index(i)
+	//				v2 := reflect.New(bv.Type().Elem())
+	//				deepCopy(v1, v2)
+	//				bv.Set(reflect.Append(bv, v2.Elem()))
+	//			}
+	//		}
+	//	}
+	//	return
+	//}
 }
 func dealTime(av reflect.Value, bv reflect.Value) {
 	//如果从数据库模型转换成pb模型,就是time.time->其他类型(可能是整形int64或者uint64,也可能是string)
@@ -229,14 +230,14 @@ func getFieldMap(at reflect.Value) map[string]struct{} {
 
 //返回底层value，如果不是字符串，数字，bool，结构体，切片数组等，可能出现未知bug
 func getRealValue(in reflect.Value) reflect.Value {
-	//if in.Kind() == reflect.Ptr || in.Kind() == reflect.Interface {
-	for {
-		if in.Kind() != reflect.Ptr && in.Kind() != reflect.Interface {
-			return in
+	if in.Kind() == reflect.Ptr || in.Kind() == reflect.Interface {
+		for {
+			if in.Kind() != reflect.Ptr && in.Kind() != reflect.Interface {
+				return in
+			}
+			in = in.Elem()
 		}
-		in = in.Elem()
 	}
-	//}
 	return in
 }
 

@@ -42,5 +42,11 @@ type Page struct {
 	PageNum  int
 	PageSize int
 	Total    int
-	Data     interface{}
+	Data     User
+}
+type PageX struct {
+	PageNum  int
+	PageSize int
+	Total    int
+	Data     Userx
 }

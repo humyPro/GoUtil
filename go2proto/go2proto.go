@@ -20,6 +20,7 @@ var (
 	field1        = regexp.MustCompile(`^(\w+) +(\w+) *(//.+)?$`) //单独写的
 	field2        = regexp.MustCompile(`^(?P<head>( *\w+, *)+) *(?P<last>\w+) +(?P<type>\w+) *(//.+)?$`)
 )
+
 //GO类型和proto类型
 var typeMap = map[string]string{
 	"float64": "double",
@@ -134,7 +135,7 @@ func handStruct(s string) {
 	}
 
 	if s == "gorm.Model" {
-		writer.WriteString("\tint32 Id = " + strconv.Itoa(fieldNumber) + ";\n")
+		writer.WriteString("\tuint32 ID = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
 		writer.WriteString("\tint64 CreatedAt = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
