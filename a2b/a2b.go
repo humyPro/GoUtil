@@ -65,6 +65,7 @@ func deepCopy(av reflect.Value, bv reflect.Value) {
 		return
 	}
 
+
 	//2-6是有符号整数，7-11是无符号整数
 	if isInteger(bv.Kind()) {
 		if bv.CanSet() {
