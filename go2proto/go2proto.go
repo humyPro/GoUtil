@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,8 +18,8 @@ var reader *bufio.Reader
 var (
 	startOfStruct = regexp.MustCompile(`^type +(\w+) +struct {$`)
 	pack          = regexp.MustCompile(`^package +(\w+)$`)
-	field1        = regexp.MustCompile(`^(\w+) +(\w+) *(//.+)?$`) //单独写的
-	field2        = regexp.MustCompile(`^(?P<head>( *\w+, *)+) *(?P<last>\w+) +(?P<type>\w+) *(//.+)?$`)
+	field1        = regexp.MustCompile(`^(\w+) +(\w+) *(.+)?$`) //单独写的
+	field2        = regexp.MustCompile(`^(?P<head>( *\w+, *)+) *(?P<last>\w+) +(?P<type>\w+) *(.+)?$`)
 )
 
 //GO类型和proto类型
@@ -33,6 +34,7 @@ var typeMap = map[string]string{
 	"uint8":   "uint32",
 	"uint16":  "uint32",
 	"uint32":  "uint32",
+	"uint":    "uint32",
 	"unit64":  "unit64",
 	"bool":    "bool",
 	"string":  "string",
@@ -49,8 +51,11 @@ var fieldNumber = 1
 //	targetFileName = "./proto/model.proto"
 //)
 
+var filename = ""
+
 var goFilePath = flag.String("g", "", "指定需要编译的go文件")
 var protoFilePath = flag.String("p", "./proto", "指定存放proto文件的位置，默认在本路径下的proto目录下")
+var goDir = flag.String("d", "", "指定存放go文件的位置，会扫描这个路径下的所有go文件")
 
 // 读取一行
 func nextLine() (string, bool) {
@@ -67,6 +72,8 @@ func nextLine() (string, bool) {
 }
 
 func genProtoFile() {
+	writer.WriteString(`syntax = "proto3";` + "\n")
+	writer.Flush()
 	for {
 		s, b := nextLine()
 		// do something
@@ -79,7 +86,11 @@ func genProtoFile() {
 			break
 		}
 	}
-	log.Println("生成proto文件成功")
+	log.Printf("生成%s.proto文件成功\n", filename)
+	packageFlag = true
+	startEndFlag = false
+	lineCount = 0
+	fieldNumber = 1
 }
 
 func handStruct(s string) {
@@ -103,6 +114,9 @@ func handStruct(s string) {
 		f := strArr[1]
 		t := strArr[2]
 		desc := strArr[3]
+		if strings.TrimSpace(desc) != "" && !strings.HasPrefix(desc, "//") {
+			desc = "//" + desc
+		}
 		writer.WriteString("\t" + getType(t) + " " + f + " = " + strconv.Itoa(fieldNumber) + ";  " + desc + "\n")
 		fieldNumber++
 		writer.Flush()
@@ -116,6 +130,9 @@ func handStruct(s string) {
 		last := strArr[3]
 		t := strArr[4]
 		desc := strArr[5]
+		if strings.TrimSpace(desc) != "" && !strings.HasPrefix(desc, "//") {
+			desc = "//" + desc
+		}
 		for _, f := range fields {
 			writer.WriteString("\t" + getType(t) + " " + strings.TrimSpace(f) + " = " + strconv.Itoa(fieldNumber) + ";  " + desc + "\n")
 			fieldNumber++
@@ -134,14 +151,14 @@ func handStruct(s string) {
 		return
 	}
 
-	if s == "gorm.Model" {
+	if strings.HasPrefix(s, "gorm.Model") {
 		writer.WriteString("\tuint32 ID = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
-		writer.WriteString("\tint64 CreatedAt = " + strconv.Itoa(fieldNumber) + ";\n")
+		writer.WriteString("\tuint64 CreatedAt = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
-		writer.WriteString("\tint64 UpdatedAt = " + strconv.Itoa(fieldNumber) + ";\n")
+		writer.WriteString("\tuint64 UpdatedAt = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
-		writer.WriteString("\tint64 DeletedAt = " + strconv.Itoa(fieldNumber) + ";\n")
+		writer.WriteString("\tuint64 DeletedAt = " + strconv.Itoa(fieldNumber) + ";\n")
 		fieldNumber++
 		return
 	}
@@ -154,13 +171,13 @@ func handStruct(s string) {
 func getType(s string) string {
 	t, ok := typeMap[s]
 	if !ok {
-		log.Fatal(lineCount, ":无法转换成的go类型->", s)
+		log.Fatal(filename, "-", lineCount, ":无法转换成的go类型->", s)
 	}
 	return t
 }
 
 func err(s string) {
-	s = fmt.Sprintf("%d:语法错误,%s\n", lineCount, s)
+	s = fmt.Sprintf(filename, "-", "%d:语法错误,%s\n", lineCount, s)
 	writer.WriteString(s)
 	writer.Flush()
 	log.Fatal(s)
@@ -176,53 +193,39 @@ func handPackage(s string) {
 		packageFlag = false
 	} else {
 		if strings.HasPrefix(s, "package") {
-			fmt.Errorf("%d行:语法错误，出现多个package定义: %s", lineCount, s)
+			fmt.Errorf("文件%s-%d行:语法错误，出现多个package定义: %s", filename, lineCount, s)
 			os.Exit(2)
 		}
 	}
 }
 
 func main() {
-	writer.WriteString(`syntax = "proto3";` + "\n")
-	writer.Flush()
-	genProtoFile()
-}
-
-//初始化reader writer
-func init() {
-
 	flag.Parse()
-	if *goFilePath == "" {
-		log.Fatal("必须指定go文件")
-	}
-
-	if !exists(*goFilePath) {
-		log.Fatal(*goFilePath, ": 目标go文件不存在")
-	}
-
-	file, e := os.Open(*goFilePath)
-	if e != nil {
-		fmt.Println(e)
-		os.Exit(1)
-	}
-	reader = bufio.NewReader(file)
-
-	f := strings.TrimSpace(*protoFilePath) + "/" + strings.Split(filepath.Base(*goFilePath), ".")[0] + ".proto"
-	if exists(f) {
-		log.Fatal(f, ": 目标proto文件已存在")
-	}
-
-	if !exists(*protoFilePath) {
-		e := os.Mkdir(*protoFilePath, 777)
+	if *goDir != "" {
+		files, e := ioutil.ReadDir(*goDir)
 		if e != nil {
-			log.Fatal(e, ":创建文件夹失败")
+			log.Fatalf("读取%s文件夹错误->%s\n", *goDir, e)
+		}
+
+		for _, f := range files {
+			name := f.Name()
+			if !f.IsDir() && strings.HasSuffix(name, ".go") {
+				wr(filepath.Join(*goDir, name))
+				genProtoFile()
+			}
 		}
 	}
-	open, e := os.OpenFile(f, os.O_RDWR|os.O_CREATE, 0766)
-	if e != nil {
-		log.Fatal(e)
+	if *goFilePath != "" {
+		if !exists(*goFilePath) {
+			log.Fatal(*goFilePath, ": 目标go文件不存在")
+		}
+		wr(*goFilePath)
+		genProtoFile()
 	}
-	writer = bufio.NewWriter(open)
+
+	if *goDir == "" && *goFilePath == "" {
+		log.Fatalf("什么也没有发生\n")
+	}
 }
 
 // 判断所给路径文件/文件夹是否存在
@@ -235,4 +238,31 @@ func exists(path string) bool {
 		return false
 	}
 	return true
+}
+
+func wr(path string) {
+	filename = path
+	file, e := os.Open(path)
+	if e != nil {
+		fmt.Println(e)
+		os.Exit(1)
+	}
+	reader = bufio.NewReader(file)
+
+	f := strings.TrimSpace(*protoFilePath) + "/" + strings.Split(filepath.Base(path), ".")[0] + ".proto"
+	if exists(f) {
+		log.Println(f, ": 目标proto文件已存在")
+	}
+
+	if !exists(*protoFilePath) {
+		e := os.Mkdir(*protoFilePath, 777)
+		if e != nil {
+			log.Println(e, ":创建文件夹失败")
+		}
+	}
+	open, e := os.OpenFile(f, os.O_RDWR|os.O_CREATE, 0766)
+	if e != nil {
+		log.Println(e)
+	}
+	writer = bufio.NewWriter(open)
 }
