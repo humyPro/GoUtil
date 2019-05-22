@@ -2,18 +2,22 @@ package util
 
 import (
 	"errors"
+	"log"
 	"reflect"
 	"time"
 )
 
+//gorm.model中的字段
 const (
 	created = "CreatedAt"
 	updated = "UpdatedAt"
 	deleted = "Undefined"
 )
 
+//时间类型
 var timeType = reflect.TypeOf(time.Now())
 
+// 该方法会从a中取值,给b中同名的字段并且是可以被赋值的类型的字段赋值,会忽略掉同名但不可赋值的字段
 //version-1:修复时间问题,如果数据源的时间是0,那么目标的时间类型为零值
 //version-2:所有id-Id-ID都可以匹配
 //version-3:支持切片和多级指针,支持map,以及各种嵌套
@@ -28,17 +32,7 @@ func TransformModel(a interface{}, b interface{}) error {
 	}
 	bv = bv.Elem()
 	av = av.Elem()
-
-	//if bv.Kind() == reflect.Struct && av.Kind() == reflect.Struct {
-	//	deepCopy(av, bv)
-	//	return nil
-	//}
-	//return errors.New("a和b的类型必须都是结构体类型")
 	deepCopy(av, bv)
-	//else if bv.Kind() == reflect.Slice && av.Kind() == reflect.Slice {
-	//	deepCopy(av, bv)
-	//	return nil
-	//}
 	return nil
 }
 
@@ -50,8 +44,13 @@ func deepCopy(av reflect.Value, bv reflect.Value) {
 			return
 		}
 	}
+
+	log.Println(av.Kind())
+	log.Println(bv.Kind())
 	av = getRealValue(av, false)
 	bv = getRealValue(bv, false)
+	log.Println(av.Kind())
+	log.Println(bv.Kind())
 	//结构体类型
 	if isStruct(bv.Kind()) && isStruct(av.Kind()) {
 		bf := getFieldMap(bv)
@@ -161,7 +160,7 @@ func deepCopy(av reflect.Value, bv reflect.Value) {
 			keys := av.MapKeys()
 			//ak: 原key值对象
 			t := av.Type().Key()
-			//只有这些类型 可以做key。。。。
+			//只有这些类型 可以做key
 			t2 := bv.Type().Key()
 			if (isInteger(t.Kind()) && isInteger(t2.Kind())) || (isString(t.Kind()) && isString(t2.Kind())) {
 				elem := bv.Type().Elem()
@@ -179,9 +178,6 @@ func deepCopy(av reflect.Value, bv reflect.Value) {
 		}
 		return
 	}
-}
-
-func dealInteger(av reflect.Value, bv reflect.Value) {
 
 }
 
@@ -300,6 +296,8 @@ func getRealValue(v reflect.Value, decodingNull bool) reflect.Value {
 	for {
 		if v.Kind() == reflect.Interface && !v.IsNil() {
 			e := v.Elem()
+			v = e
+			//JSON包下只取到指针一级,这儿要取到指针最终指向的数据
 			if e.Kind() == reflect.Ptr && !e.IsNil() && (!decodingNull || e.Elem().Kind() == reflect.Ptr) {
 				haveAddr = false
 				v = e
@@ -310,10 +308,14 @@ func getRealValue(v reflect.Value, decodingNull bool) reflect.Value {
 		if v.Kind() != reflect.Ptr {
 			break
 		}
+
+		//如果decodingNull=true,那么如果一个值是nil指针类型嘛,因为v.Elem().Kind() ==Invalid,这儿就会退出
 		if v.Elem().Kind() != reflect.Ptr && decodingNull && v.CanSet() {
 			break
 		}
+		//
 		if v.IsNil() {
+			//如果是nil。则新建一个Zero value(ptr)类型,取elem赋值给v
 			v.Set(reflect.New(v.Type().Elem()))
 		}
 
@@ -327,11 +329,6 @@ func getRealValue(v reflect.Value, decodingNull bool) reflect.Value {
 	}
 	return v
 }
-
-////只能是这几个类型，才能设置其值
-//func isCanSetValue(kind reflect.Kind) bool {
-//	return isInteger(kind) || isStruct(kind) || isString(kind) || isMap(kind) || isArrayOrSlice(kind) || isBool(kind) || isFloat(kind)
-//}
 
 //所有整数
 func isInteger(kind reflect.Kind) bool {

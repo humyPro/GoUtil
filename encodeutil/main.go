@@ -17,7 +17,7 @@ func main() {
 	if len(Args) >= 2 {
 		arg1 := Args[1]
 		port, e := strconv.Atoi(arg1)
-		if e != nil || port <= 0 || port > 65535 {
+		if e != nil || port < 0 || port > 65535 {
 			log.Println("端口错误，默认使用8853端口")
 			port = 8853
 		}

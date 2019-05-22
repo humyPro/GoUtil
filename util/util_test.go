@@ -11,7 +11,7 @@ import (
 
 type A struct {
 	B *B
-	//A string
+	A string
 }
 
 type B struct {
@@ -21,24 +21,15 @@ type B struct {
 
 type C struct {
 	B **D
+	A *****string
 }
 
 type D struct {
 	Name **string
-	Addr []*string
+	Addr *[]*string
 }
 
 func TestTransformModel(t *testing.T) {
-	//n := "humin"
-	//a := A{
-	//	B: &B{
-	//		Name: &n,
-	//		Addr: nil,
-	//	},
-	//	//A: "start",
-	//}
-
-	//b := C{}
 
 	bs := make(map[int8]B)
 	//ds := make(map[uint64]D)
@@ -57,4 +48,59 @@ func TestTransformModel(t *testing.T) {
 	//_ = json.Unmarshal(bytes, &b)
 
 	fmt.Println(ds)
+}
+
+func TestTransformModel2(t *testing.T) {
+	a := A{
+		B: &B{
+			Name: "humin",
+			Addr: []string{"成都", "上海"},
+		},
+		//A: "start",
+	}
+
+	b := C{}
+	e := TransformModel(&a, &b)
+	if e != nil {
+		t.Error(e)
+	}
+
+	t.Log(b)
+}
+
+func TestTransformModel3(t *testing.T) {
+	var a interface{}
+	a = 1
+
+	var b uint64
+
+	_ = TransformModel(&a, &b)
+	t.Log(b)
+}
+
+func TestTransformModel4(t *testing.T) {
+	var a = &A{
+		B: &B{
+			Name: "testB",
+			Addr: []string{"成都", "上海"},
+		},
+		A: "testA",
+	}
+
+	var c C
+	var d = &a
+
+	t.Log(TransformModel(&d, &c))
+	t.Log(c)
+}
+
+func TestTransformModel5(t *testing.T) {
+	s1 := []string{"213", "12312"}
+
+	var s2 []string
+
+	t.Log(TransformModel(&s1, &s2))
+
+	t.Log(s2)
+
 }
