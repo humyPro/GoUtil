@@ -4,9 +4,11 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
+	"time"
 )
 
 type A struct {
@@ -103,4 +105,45 @@ func TestTransformModel5(t *testing.T) {
 
 	t.Log(s2)
 
+}
+
+func BenchmarkTransformModel(b *testing.B) {
+	var a = &A{
+		B: &B{
+			Name: "testB",
+			Addr: []string{"成都", "上海"},
+		},
+		A: "testA",
+	}
+
+	now := time.Now()
+	var c C
+	for i := 0; i < 500; i++ {
+		bytes, _ := json.Marshal(a)
+		_ = json.Unmarshal(bytes, &c)
+	}
+
+	b.Log(time.Now().UnixNano() - now.UnixNano())
+	bytes, _ := json.Marshal(c)
+	b.Log(string(bytes))
+}
+func BenchmarkTransformModel2(b *testing.B) {
+	var a = &A{
+		B: &B{
+			Name: "testB",
+			Addr: []string{"成都", "上海"},
+		},
+		A: "testA",
+	}
+
+	now := time.Now()
+	var c2 C
+	for i := 0; i < 500; i++ {
+		TransformModel(&a, &c2)
+	}
+
+	b.Log(time.Now().UnixNano() - now.UnixNano())
+
+	bytes2, _ := json.Marshal(c2)
+	b.Log(string(bytes2))
 }

@@ -2,7 +2,6 @@ package util
 
 import (
 	"errors"
-	"log"
 	"reflect"
 	"time"
 )
@@ -44,13 +43,8 @@ func deepCopy(av reflect.Value, bv reflect.Value) {
 			return
 		}
 	}
-
-	log.Println(av.Kind())
-	log.Println(bv.Kind())
 	av = getRealValue(av, false)
 	bv = getRealValue(bv, false)
-	log.Println(av.Kind())
-	log.Println(bv.Kind())
 	//结构体类型
 	if isStruct(bv.Kind()) && isStruct(av.Kind()) {
 		bf := getFieldMap(bv)
