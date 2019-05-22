@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="keywords" content="Unicode编码转换,Unicode转ASCII,ASCII转Unicode,中文转Unicode,Unicode转中文">
+    <meta name="description"
+          content="本工具是Unicode编码转换，为您提供ASCII与Unicode互转，Unicode与中文互转，在文本框里输入要转换的内容，然后点击要转换的类型按钮，转换完成后即可看到对应的内容。">
+    <script src="http://push.zhanzhang.baidu.com/push.js"></script>
+    <script>
+        var jsurlbase = '//csstools.chinaz.com/tools/js';
+        var imgurlbase = '//csstools.chinaz.com/tools/images';
+        var styleurlbase = '//csstools.chinaz.com/tools/styles';
+    </script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/mobilepage.js?v=201702"></script>
+    <link rel="stylesheet" type="text/css" href="//csstools.chinaz.com/common/styles/all-base.css?v=201803">
+    <link rel="stylesheet" type="text/css" href="//csstools.chinaz.com/common/styles/publicstyle.css?v=201902">
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/jq-public.js?v=201708"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/layer/layer.js?v=201801"></script>
+    <link rel="stylesheet" href="http://csstools.chinaz.com/common/layer/layer.css?v=3.1.1" id="layuicss-layer">
+    <script type="text/javascript" src="//csstools.chinaz.com/tools/js/member.js?v=201803"></script>
+    <!--[if IE 6]>
+    <script type="text/javascript" src="//csstools.chinaz.com/common/js/DD_belatedPNG.js"></script>
+    <script>    DD_belatedPNG.fix('*');</script>
+    <![ENDIF]-->
+    <link rel="stylesheet" href="//csstools.chinaz.com/tools/styles/toolstyle.css" type="text/css">
+    <script src="//csstools.chinaz.com/tools/js/jq-tools.js" charset="gb2312" type="text/javascript"></script>
+    <script type="text/javascript" src="//csstools.chinaz.com/myuser/chinaz_top.js" charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-3.4.0.min.js"></script>
+    <script>
+
+        $(function () {
+            $("#encode").click(function () {
+                let txt = $("#content").val();
+                $.post("/content", {txt: txt}, function (data) {
+                    $("#resc").text=""
+                    $("#result").val(data)
+                })
+            })
+        })
+
+
+    </script>
+</head>
+<body>
+<div class="wrapper">
+    <div class="wwlr auto">
+        <div class="clearfix">
+            <div class="pr JsTxtW-r fl">
+                <textarea class="JsTxtCo bor-a1s h200 WrapHid wwlr-l" name="content" id="content" placeholder="请把你需要转换的内容粘贴在这里"></textarea>
+                <b class="search-hint CentHid"></b>
+            </div>
+            <div class="pr JsTxtW-r ml20 fl">
+                <textarea class="JsTxtCo bor-a1s h200 WrapHid wwlr-l" name="result" id="result" placeholder="转换后的结果"></textarea>
+                <b id="resc" class="search-hint CentHid"></b>
+            </div>
+        </div>
+        <div class="GuoLvWrapCenter pt10 clearfix">
+            <div class="GuoLvCbtn">
+                <input style="user-seletct: none;" type="text" id="encode" value="编码" class="GLOkBtn">
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
